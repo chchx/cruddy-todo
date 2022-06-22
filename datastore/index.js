@@ -48,47 +48,38 @@ exports.readAll = (callback) => {
 exports.readOne = (id, callback) => {
   fs.readFile(exports.dataDir + '/' + id + '.txt', 'utf8', (err, data) => {
     if (err) {
-      callback(err, null);
+      callback(err);
     } else {
       callback(null, { id: id, text: data })
     }
   })
-  // fs.readdir(exports.dataDir, (err, files) => {
-  //   if (err) {
-  //     throw ('also fill later')
-  //   } else {
-  //     let data = files.filter((file) => {
-  //       let getID = path.parse(file).name;
-  //       return getID === id
-  //     })
-  //     data = data.map((file) => {
-  //       let getID = path.parse(file).name;
-  //       return { id: getID, text: getID }
-  //     })
-  //     callback(null, data);
-  //   }
-  // })
 };
 
 exports.update = (id, text, callback) => {
-  var item = items[id];
-  if (!item) {
-    callback(new Error(`No item with id: ${id}`));
-  } else {
-    items[id] = text;
-    callback(null, { id, text });
-  }
+  fs.readFile(exports.dataDir + '/' + id + '.txt', 'utf8', (err, data) => {
+    if (err) {
+      console.error('no file exists by that ID');
+      callback(err, null);
+    } else {
+      fs.writeFile(exports.dataDir + '/' + id + '.txt', text, (err) => {
+        if (err) {
+          console.error('error updating file');
+        } else {
+          callback(null, { id: id, text: text });
+        }
+      })
+    }
+  })
 };
 
 exports.delete = (id, callback) => {
-  var item = items[id];
-  delete items[id];
-  if (!item) {
-    // report an error if item not found
-    callback(new Error(`No item with id: ${id}`));
-  } else {
-    callback();
-  }
+  fs.unlink(exports.dataDir + '/' + id + '.txt', (err) => {
+    if (err) {
+      callback(err)
+    } else {
+      callback()
+    }
+  })
 };
 
 // Config+Initialization code -- DO NOT MODIFY /////////////////////////////////
