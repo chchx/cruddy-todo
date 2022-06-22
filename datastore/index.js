@@ -8,15 +8,15 @@ const counter = require('./counter');
 // Public API - Fix these CRUD functions ///////////////////////////////////////
 
 exports.create = (text, callback) => {
-  counter.getNextUniqueId( (err, fileName) => {
+  counter.getNextUniqueId((err, fileName) => {
     // get path/filename
     // use fs.write(pathname, text, callback)
-    let filePath = path.join(__dirname, fileName + '.txt');
+    let filePath = path.join(exports.dataDir, fileName + '.txt');
     fs.writeFile(filePath, text, (err) => {
       if (err) {
         throw ('write failed in .create')
       } else {
-        callback(null, text );
+        callback(null, { id: fileName, text: text }); // REVISIT THIS!!!
       }
     })
   })
@@ -24,19 +24,50 @@ exports.create = (text, callback) => {
 };
 
 exports.readAll = (callback) => {
-  var data = _.map(items, (text, id) => {
-    return { id, text };
+  //var getID = path.parse(pathfile)
+  //var ID = thisID.name
+
+  fs.readdir(exports.dataDir, (err, files) => {
+    if (err) {
+      throw ('fill later')
+    } else {
+      let data = files.map((file) => {
+        let getID = path.parse(file).name;
+        return { id: getID, text: getID }
+      })
+      callback(null, data)
+    }
   });
-  callback(null, data);
+  // console.log(filePaths);
+  // return filePaths
+  // var data = _.map(items, (text, id) => {
+  //   return { id, text };
+  // });
 };
 
 exports.readOne = (id, callback) => {
-  var text = items[id];
-  if (!text) {
-    callback(new Error(`No item with id: ${id}`));
-  } else {
-    callback(null, { id, text });
-  }
+  fs.readFile(exports.dataDir + '/' + id + '.txt', 'utf8', (err, data) => {
+    if (err) {
+      callback(err, null);
+    } else {
+      callback(null, { id: id, text: data })
+    }
+  })
+  // fs.readdir(exports.dataDir, (err, files) => {
+  //   if (err) {
+  //     throw ('also fill later')
+  //   } else {
+  //     let data = files.filter((file) => {
+  //       let getID = path.parse(file).name;
+  //       return getID === id
+  //     })
+  //     data = data.map((file) => {
+  //       let getID = path.parse(file).name;
+  //       return { id: getID, text: getID }
+  //     })
+  //     callback(null, data);
+  //   }
+  // })
 };
 
 exports.update = (id, text, callback) => {
