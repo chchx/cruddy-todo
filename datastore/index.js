@@ -1,7 +1,10 @@
-const fs = require('fs');
+const fs = require('fs');  //Promise.pomisifyAll(require('fs))
 const path = require('path');
 const _ = require('underscore');
 const counter = require('./counter');
+const Promise = require('bluebird');
+const fsa = Promise.promisifyAll(require('fs'));
+// const these = Promise.promisifyAll(require('./index.js'))
 
 // var items = {};
 
@@ -24,25 +27,51 @@ exports.create = (text, callback) => {
 };
 
 exports.readAll = (callback) => {
+  fsa.readdirAsync(exports.dataDir).then((files) => {
+    return files.map((file) => {
+      let getID = path.parse(file).name
+      return exports.readOneAsync(getID)
+    })
+  }).then((newFiles) => {
+    return Promise.all(newFiles)
+  }).then((toDos) => {
+    callback(null, toDos)
+  })
+
+  // fs.readdir(exports.dataDir, (err, files) => {
+  //   if (err) {
+  //     throw ('fill later')
+  //   } else {
+  //    files = files.map( (file) => {
+  //       let getID = path.parse(file).name
+  //       return exports.readOneAsync(getID)
+  //     })
+  //     Promise.all(files).then((toDos) => {
+  //       callback(null, toDos)
+  //     })
+  //   }
+  // })
+
   //var getID = path.parse(pathfile)
   //var ID = thisID.name
-
-  fs.readdir(exports.dataDir, (err, files) => {
-    if (err) {
-      throw ('fill later')
-    } else {
-      let data = files.map((file) => {
-        let getID = path.parse(file).name;
-        return { id: getID, text: getID }
-      })
-      callback(null, data)
-    }
-  });
+  // fsa.readdirAsync(exports.dataDir, (err, files) => {
+  //   if (err) {
+  //     throw ('fill later')
+  //   } else {
+  //     let data = files.map((file) => {
+  //       let getID = path.parse(file).name;
+  //       return { id: getID, text: getID }
+  //     })
+  //     callback(null, data)
+  //   }
+  // });
   // console.log(filePaths);
   // return filePaths
   // var data = _.map(items, (text, id) => {
   //   return { id, text };
   // });
+
+  // callback(null, array of message objects)
 };
 
 exports.readOne = (id, callback) => {
@@ -54,6 +83,9 @@ exports.readOne = (id, callback) => {
     }
   })
 };
+
+exports.readOneAsync = Promise.promisify(exports.readOne);
+
 
 exports.update = (id, text, callback) => {
   fs.readFile(exports.dataDir + '/' + id + '.txt', 'utf8', (err, data) => {
